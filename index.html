@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Batch Photo Color Matching App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .controls {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+
+        .upload-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .upload-btn.batch {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .upload-btn.batch:hover {
+            box-shadow: 0 8px 20px rgba(245, 87, 108, 0.4);
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .reference-section {
+            margin-bottom: 40px;
+        }
+
+        .reference-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #1a1a1a;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .image-container {
+            background: #1a1a1a;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s;
+        }
+
+        .image-container h3 {
+            margin-bottom: 15px;
+            color: #a0a0a0;
+            font-weight: 500;
+        }
+
+        .image-wrapper {
+            position: relative;
+            width: 100%;
+            background: #0a0a0a;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .image-wrapper img,
+        .image-wrapper canvas {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .batch-section {
+            margin-top: 40px;
+        }
+
+        .batch-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 0 10px;
+        }
+
+        .batch-header h2 {
+            font-size: 1.8rem;
+            color: #667eea;
+        }
+
+        .process-all-btn {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .process-all-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(79, 172, 254, 0.4);
+        }
+
+        .process-all-btn:disabled {
+            background: #333;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .batch-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .batch-item {
+            background: #1a1a1a;
+            border-radius: 12px;
+            padding: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .batch-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .batch-item h4 {
+            font-size: 14px;
+            color: #a0a0a0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 200px;
+        }
+
+        .remove-btn {
+            background: #ff4757;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.2s;
+        }
+
+        .remove-btn:hover {
+            background: #ff3838;
+        }
+
+        .batch-item .image-wrapper {
+            margin-bottom: 10px;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .batch-item canvas {
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            max-width: 100%;
+        }
+
+        .download-single-btn {
+            width: 100%;
+            padding: 8px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .download-single-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .stats {
+            margin-top: 15px;
+            padding: 15px;
+            background: #0a0a0a;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .stats h4 {
+            margin-bottom: 10px;
+            color: #667eea;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            color: #a0a0a0;
+        }
+
+        .progress-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            display: none;
+        }
+
+        .progress-content {
+            background: #1a1a1a;
+            padding: 40px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .progress-bar {
+            width: 300px;
+            height: 8px;
+            background: #333;
+            border-radius: 4px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .download-all-btn {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+            margin-left: 10px;
+        }
+
+        .download-all-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(56, 239, 125, 0.4);
+        }
+
+        .download-all-btn:disabled {
+            background: #333;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+
+        .processing {
+            animation: pulse 1.5s infinite;
+            opacity: 0.6;
+        }
+
+        .status-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-badge.pending {
+            background: #ff9800;
+            color: white;
+        }
+
+        .status-badge.complete {
+            background: #4caf50;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Batch Photo Color Matching</h1>
+        
+        <div class="controls">
+            <button class="upload-btn" onclick="document.getElementById('referenceInput').click()">
+                📸 Upload Reference Photo
+            </button>
+            <input type="file" id="referenceInput" accept="image/*" onchange="loadReference(event)">
+            
+            <button class="upload-btn batch" onclick="document.getElementById('batchInput').click()">
+                🎨 Upload Photos to Match (Multiple)
+            </button>
+            <input type="file" id="batchInput" accept="image/*" multiple onchange="loadBatchImages(event)">
+        </div>
+
+        <div class="reference-section">
+            <div class="reference-container">
+                <div class="image-container">
+                    <h3>Reference Photo (Color Source)</h3>
+                    <div class="image-wrapper">
+                        <canvas id="referenceCanvas"></canvas>
+                    </div>
+                    <div id="referenceStats" class="stats" style="display: none;">
+                        <h4>Color Statistics</h4>
+                        <div class="stat-row">
+                            <span>Red Mean:</span>
+                            <span id="refRMean">-</span>
+                        </div>
+                        <div class="stat-row">
+                            <span>Green Mean:</span>
+                            <span id="refGMean">-</span>
+                        </div>
+                        <div class="stat-row">
+                            <span>Blue Mean:</span>
+                            <span id="refBMean">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="batch-section" id="batchSection" style="display: none;">
+            <div class="batch-header">
+                <h2>Photos to Process</h2>
+                <div>
+                    <button id="processAllBtn" class="process-all-btn" onclick="processAllImages()">
+                        🎨 Process All Photos
+                    </button>
+                    <button id="downloadAllBtn" class="download-all-btn" onclick="downloadAllResults()" disabled>
+                        💾 Download All Results
+                    </button>
+                </div>
+            </div>
+            <div class="batch-grid" id="batchGrid"></div>
+        </div>
+    </div>
+
+    <div class="progress-overlay" id="progressOverlay">
+        <div class="progress-content">
+            <h3>Processing Images...</h3>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <p id="progressText">0 / 0</p>
+        </div>
+    </div>
+
+    <script>
+        let referenceStats = null;
+        let batchImages = [];
+        let processedCount = 0;
+
+        function loadReference(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.src = e.target.result;
+                img.onload = function() {
+                    drawAndAnalyzeReference(img);
+                    checkIfReadyToProcess();
+                };
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function drawAndAnalyzeReference(img) {
+            const canvas = document.getElementById('referenceCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Scale image to fit container while maintaining aspect ratio
+            const maxWidth = 560;
+            const scale = Math.min(1, maxWidth / img.width);
+            canvas.width = img.width * scale;
+            canvas.height = img.height * scale;
+            
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            referenceStats = calculateStats(imageData);
+            displayStats('ref', referenceStats);
+            document.getElementById('referenceStats').style.display = 'block';
+        }
+
+        function loadBatchImages(event) {
+            const files = Array.from(event.target.files);
+            if (!files.length) return;
+
+            document.getElementById('batchSection').style.display = 'block';
+            processedCount = 0;
+            
+            files.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = function() {
+                        addBatchImage(img, file.name, index);
+                        checkIfReadyToProcess();
+                    };
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function addBatchImage(img, filename, index) {
+            const batchGrid = document.getElementById('batchGrid');
+            
+            const batchItem = document.createElement('div');
+            batchItem.className = 'batch-item';
+            batchItem.id = `batch-item-${index}`;
+            
+            batchItem.innerHTML = `
+                <span class="status-badge pending">Pending</span>
+                <div class="batch-item-header">
+                    <h4 title="${filename}">${filename}</h4>
+                    <button class="remove-btn" onclick="removeBatchImage(${index})">✕</button>
+                </div>
+                <div class="image-wrapper">
+                    <canvas id="original-${index}"></canvas>
+                </div>
+                <div class="image-wrapper" style="display: none;">
+                    <canvas id="result-${index}"></canvas>
+                </div>
+                <button class="download-single-btn" onclick="downloadSingleResult(${index})" style="display: none;">
+                    💾 Download
+                </button>
+            `;
+            
+            batchGrid.appendChild(batchItem);
+            
+            // Draw original image
+            const canvas = document.getElementById(`original-${index}`);
+            const ctx = canvas.getContext('2d');
+            
+            const maxSize = 300;
+            const scale = Math.min(maxSize / img.width, maxSize / img.height, 1);
+            canvas.width = img.width * scale;
+            canvas.height = img.height * scale;
+            
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            
+            // Store image data
+            batchImages[index] = {
+                img: img,
+                filename: filename,
+                processed: false,
+                originalCanvas: canvas
+            };
+        }
+
+        function removeBatchImage(index) {
+            const item = document.getElementById(`batch-item-${index}`);
+            item.remove();
+            delete batchImages[index];
+            checkIfReadyToProcess();
+        }
+
+        function calculateStats(imageData) {
+            const data = imageData.data;
+            let rSum = 0, gSum = 0, bSum = 0;
+            const pixelCount = data.length / 4;
+            
+            // Calculate means
+            for (let i = 0; i < data.length; i += 4) {
+                rSum += data[i];
+                gSum += data[i + 1];
+                bSum += data[i + 2];
+            }
+            
+            const rMean = rSum / pixelCount;
+            const gMean = gSum / pixelCount;
+            const bMean = bSum / pixelCount;
+            
+            // Calculate standard deviations
+            let rVar = 0, gVar = 0, bVar = 0;
+            for (let i = 0; i < data.length; i += 4) {
+                rVar += Math.pow(data[i] - rMean, 2);
+                gVar += Math.pow(data[i + 1] - gMean, 2);
+                bVar += Math.pow(data[i + 2] - bMean, 2);
+            }
+            
+            const rStd = Math.sqrt(rVar / pixelCount);
+            const gStd = Math.sqrt(gVar / pixelCount);
+            const bStd = Math.sqrt(bVar / pixelCount);
+            
+            return {
+                mean: { r: rMean, g: gMean, b: bMean },
+                std: { r: rStd, g: gStd, b: bStd }
+            };
+        }
+
+        function displayStats(prefix, stats) {
+            document.getElementById(prefix + 'RMean').textContent = stats.mean.r.toFixed(1);
+            document.getElementById(prefix + 'GMean').textContent = stats.mean.g.toFixed(1);
+            document.getElementById(prefix + 'BMean').textContent = stats.mean.b.toFixed(1);
+        }
+
+        function checkIfReadyToProcess() {
+            const processBtn = document.getElementById('processAllBtn');
+            const hasImages = Object.keys(batchImages).length > 0;
+            processBtn.disabled = !referenceStats || !hasImages;
+        }
+
+        async function processAllImages() {
+            if (!referenceStats) return;
+            
+            const indices = Object.keys(batchImages).filter(i => batchImages[i]);
+            const total = indices.length;
+            
+            if (total === 0) return;
+            
+            // Show progress overlay
+            document.getElementById('progressOverlay').style.display = 'flex';
+            document.getElementById('progressText').textContent = `0 / ${total}`;
+            document.getElementById('progressFill').style.width = '0%';
+            
+            for (let i = 0; i < indices.length; i++) {
+                await processImage(parseInt(indices[i]));
+                
+                // Update progress
+                const progress = ((i + 1) / total) * 100;
+                document.getElementById('progressFill').style.width = progress + '%';
+                document.getElementById('progressText').textContent = `${i + 1} / ${total}`;
+            }
+            
+            // Hide progress overlay
+            setTimeout(() => {
+                document.getElementById('progressOverlay').style.display = 'none';
+                document.getElementById('downloadAllBtn').disabled = false;
+            }, 500);
+        }
+
+        function processImage(index) {
+            return new Promise((resolve) => {
+                const imageData = batchImages[index];
+                if (!imageData || imageData.processed) {
+                    resolve();
+                    return;
+                }
+                
+                const batchItem = document.getElementById(`batch-item-${index}`);
+                batchItem.classList.add('processing');
+                
+                setTimeout(() => {
+                    const img = imageData.img;
+                    const resultCanvas = document.getElementById(`result-${index}`);
+                    const resultCtx = resultCanvas.getContext('2d');
+                    
+                    // Set canvas size
+                    resultCanvas.width = img.width;
+                    resultCanvas.height = img.height;
+                    
+                    // Draw original image to get image data
+                    resultCtx.drawImage(img, 0, 0);
+                    const targetImageData = resultCtx.getImageData(0, 0, img.width, img.height);
+                    const targetStats = calculateStats(targetImageData);
+                    
+                    // Apply color matching
+                    const data = targetImageData.data;
+                    for (let i = 0; i < data.length; i += 4) {
+                        let r = data[i];
+                        let g = data[i + 1];
+                        let b = data[i + 2];
+                        
+                        // Apply color transfer formula
+                        r = (r - targetStats.mean.r) * (referenceStats.std.r / targetStats.std.r) + referenceStats.mean.r;
+                        g = (g - targetStats.mean.g) * (referenceStats.std.g / targetStats.std.g) + referenceStats.mean.g;
+                        b = (b - targetStats.mean.b) * (referenceStats.std.b / targetStats.std.b) + referenceStats.mean.b;
+                        
+                        // Clamp values
+                        data[i] = Math.max(0, Math.min(255, r));
+                        data[i + 1] = Math.max(0, Math.min(255, g));
+                        data[i + 2] = Math.max(0, Math.min(255, b));
+                    }
+                    
+                    // Draw result at display size
+                    resultCtx.putImageData(targetImageData, 0, 0);
+                    
+                    // Show result in UI
+                    const displayCanvas = document.createElement('canvas');
+                    const displayCtx = displayCanvas.getContext('2d');
+                    const maxSize = 300;
+                    const scale = Math.min(maxSize / img.width, maxSize / img.height, 1);
+                    displayCanvas.width = img.width * scale;
+                    displayCanvas.height = img.height * scale;
+                    displayCtx.drawImage(resultCanvas, 0, 0, displayCanvas.width, displayCanvas.height);
+                    
+                    const resultWrapper = batchItem.querySelectorAll('.image-wrapper')[1];
+                    resultWrapper.innerHTML = '';
+                    resultWrapper.appendChild(displayCanvas);
+                    resultWrapper.style.display = 'block';
+                    
+                    // Update UI
+                    batchItem.classList.remove('processing');
+                    batchItem.querySelector('.status-badge').className = 'status-badge complete';
+                    batchItem.querySelector('.status-badge').textContent = 'Complete';
+                    batchItem.querySelector('.download-single-btn').style.display = 'block';
+                    
+                    // Store processed data
+                    batchImages[index].processed = true;
+                    batchImages[index].resultCanvas = resultCanvas;
+                    
+                    resolve();
+                }, 100);
+            });
+        }
+
+        function downloadSingleResult(index) {
+            const imageData = batchImages[index];
+            if (!imageData || !imageData.resultCanvas) return;
+            
+            // Convert canvas to blob for better compatibility
+            imageData.resultCanvas.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.download = `matched-${imageData.filename}`;
+                link.href = url;
+                link.style.display = 'none';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                // Clean up the URL object
+                setTimeout(() => URL.revokeObjectURL(url), 100);
+            }, 'image/png');
+        }
+
+        async function downloadAllResults() {
+            const processedImages = Object.entries(batchImages)
+                .filter(([_, data]) => data && data.processed && data.resultCanvas);
+            
+            if (processedImages.length === 0) return;
+            
+            if (processedImages.length === 1) {
+                // If only one image, download directly
+                const [index, _] = processedImages[0];
+                downloadSingleResult(parseInt(index));
+                return;
+            }
+            
+            // For multiple images, create a zip file using JSZip
+            // Since we can't use external libraries, we'll download with delays
+            for (let i = 0; i < processedImages.length; i++) {
+                const [index, data] = processedImages[i];
+                
+                await new Promise((resolve) => {
+                    data.resultCanvas.toBlob(function(blob) {
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.download = `matched-${data.filename}`;
+                        link.href = url;
+                        link.style.display = 'none';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        
+                        // Clean up
+                        setTimeout(() => {
+                            URL.revokeObjectURL(url);
+                            resolve();
+                        }, 200);
+                    }, 'image/png');
+                });
+                
+                // Delay between downloads to prevent browser blocking
+                if (i < processedImages.length - 1) {
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                }
+            }
+        }
+    </script>
+</body>
+</html>
